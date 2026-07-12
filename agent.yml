@@ -1,0 +1,24 @@
+﻿services:
+  target-ubuntu:
+    image: ubuntu:22.04
+    hostname: target-ubuntu
+    container_name: target-ubuntu
+    networks:
+      - docker-soc-lab_default
+    # install SSH + the Wazuh agent, connect to the manager, then keep SSH running
+    command: >
+      bash -c "
+      apt-get update &&
+      apt-get install -y curl gnupg2 openssh-server sudo lsb-release &&
+      mkdir -p /run/sshd &&
+      curl -so wazuh-agent.deb https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.9.0-1_amd64.deb &&
+      WAZUH_MANAGER='wazuh.manager' dpkg -i ./wazuh-agent.deb &&
+      /var/ossec/bin/wazuh-control start &&
+      useradd -m -s /bin/bash victim &&
+      echo 'victim:password123' | chpasswd &&
+      /usr/sbin/sshd -D
+      "
+
+networks:
+  docker-soc-lab_default:
+    external: true
