@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Wazuh generated certificates and keys - regenerated locally, never commit
+config/wazuh_indexer_ssl_certs/
+*.pem
+*.key
