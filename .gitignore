@@ -221,3 +221,7 @@ __marimo__/
 config/wazuh_indexer_ssl_certs/
 *.pem
 *.key
+
+config/wazuh_indexer_ssl_certs/
+*.pem
+*.key
