@@ -5,16 +5,26 @@
     container_name: target-ubuntu
     networks:
       - docker-soc-lab_default
-    # install SSH + the Wazuh agent, connect to the manager, then keep SSH running
+    # persist the agent's registration (client.keys) + config across recreations, so the
+    # agent reconnects with its existing identity instead of colliding with a stale
+    # same-name registration still held by the manager
+    volumes:
+      - target_ossec_etc:/var/ossec/etc
+    # install SSH + rsyslog + the Wazuh agent, wire sshd auth logs to a flat file Wazuh
+    # can tail (this minimal container has no systemd/journald, so sshd's syslog() calls
+    # go nowhere unless rsyslogd is running to own /dev/log), then keep SSH running
     command: >
       bash -c "
       apt-get update &&
-      apt-get install -y curl gnupg2 openssh-server sudo lsb-release &&
+      apt-get install -y curl gnupg2 openssh-server rsyslog sudo lsb-release &&
       mkdir -p /run/sshd &&
+      rsyslogd &&
       curl -so wazuh-agent.deb https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.9.0-1_amd64.deb &&
       WAZUH_MANAGER='wazuh.manager' dpkg -i ./wazuh-agent.deb &&
-      /var/ossec/bin/wazuh-control start &&
-      useradd -m -s /bin/bash victim &&
+      printf '  <localfile>\n    <log_format>syslog</log_format>\n    <location>/var/log/auth.log</location>\n  </localfile>\n' > /tmp/auth_localfile.xml &&
+      grep -q '<location>/var/log/auth.log</location>' /var/ossec/etc/ossec.conf || sed -i \"$(grep -n '<ossec_config>' /var/ossec/etc/ossec.conf | head -1 | cut -d: -f1)r /tmp/auth_localfile.xml\" /var/ossec/etc/ossec.conf &&
+      /var/ossec/bin/wazuh-control restart &&
+      (id victim || useradd -m -s /bin/bash victim) &&
       echo 'victim:password123' | chpasswd &&
       /usr/sbin/sshd -D
       "
@@ -22,3 +32,6 @@
 networks:
   docker-soc-lab_default:
     external: true
+
+volumes:
+  target_ossec_etc:
