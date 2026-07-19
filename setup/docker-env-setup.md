@@ -1,6 +1,7 @@
 # Wazuh SIEM Docker Lab
 
-A fully containerised Wazuh 4.9.0 SIEM stack running on Docker Desktop (Windows + WSL2 backend). I built this to get hands-on with log ingestion, agent enrollment, and real alert detection — starting from zero and ending with a live brute-force attack showing up in the dashboard.
+A fully containerised Wazuh 4.9.0 SIEM stack running on Docker Desktop 
+(Windows + WSL2 backend). I built this to get hands-on with log ingestion, agent enrollment, and real alert detection — starting from zero and ending with a live brute-force attack showing up in the dashboard.
 
 ---
 
